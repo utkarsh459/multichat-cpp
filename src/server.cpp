@@ -54,8 +54,21 @@ void Server::acceptClient() {
         return;
     }
 
-    std::cout << "Client connected!\n";
-    closesocket(clientSock);
+std::cout << "Client connected!\n";
+
+// buffer to store message
+char buffer[1024] = {0};
+
+// receive message
+int bytesReceived = recv(clientSock, buffer, sizeof(buffer), 0);
+
+if (bytesReceived > 0) {
+    std::cout << "Client says: " << buffer << "\n";
+} else {
+    std::cout << "Failed to receive message.\n";
+}
+
+closesocket(clientSock);
 }
 
 void Server::stop() {
