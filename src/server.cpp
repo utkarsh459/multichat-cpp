@@ -1,27 +1,44 @@
 #include "Server.h"
 #include <iostream>
+#include <cstring> // for memset
 
 Server::Server(int port) {
     this->port = port;
     listenSock = INVALID_SOCKET;
 }
 
+void Server::handleClient(SOCKET clientSock) {
+    char buffer[1024];
+
+    while (true) {
+        memset(buffer, 0, sizeof(buffer));
+
+        int bytesReceived = recv(clientSock, buffer, sizeof(buffer), 0);
+
+        if (bytesReceived <= 0) {
+            std::cout << "Client disconnected.\n";
+            break;
+        }
+
+        std::cout << "Client says: " << buffer << "\n";
+    }
+
+    closesocket(clientSock);
+}
+
 void Server::start() {
-    // winsock initialize karo
     WSADATA wsaData;
     if (WSAStartup(MAKEWORD(2,2), &wsaData) != 0) {
         std::cout << "WSAStartup failed!\n";
         return;
     }
 
-    // socket banao
     listenSock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (listenSock == INVALID_SOCKET) {
         std::cout << "Socket creation failed!\n";
         return;
     }
 
-    //Bind bind bind
     sockaddr_in addr{};
     addr.sin_family = AF_INET;
     addr.sin_port = htons(port);
@@ -32,7 +49,6 @@ void Server::start() {
         return;
     }
 
-    // sunao sunao
     if (listen(listenSock, SOMAXCONN) == SOCKET_ERROR) {
         std::cout << "Listen failed!\n";
         return;
@@ -42,33 +58,24 @@ void Server::start() {
 }
 
 void Server::acceptClient() {
-    std::cout << "Waiting for client...\n";
+    std::cout << "Server ready for multiple clients...\n";
 
-    sockaddr_in clientAddr{};
-    int clientLen = sizeof(clientAddr);
+    while (true) {
+        sockaddr_in clientAddr{};
+        int clientLen = sizeof(clientAddr);
 
-    SOCKET clientSock = accept(listenSock, (sockaddr*)&clientAddr, &clientLen);
+        SOCKET clientSock = accept(listenSock, (sockaddr*)&clientAddr, &clientLen);
 
-    if (clientSock == INVALID_SOCKET) {
-        std::cout << "Accept failed!\n";
-        return;
+        if (clientSock == INVALID_SOCKET) {
+            std::cout << "Accept failed!\n";
+            continue;
+        }
+
+        std::cout << "New client connected!\n";
+
+        std::thread t(&Server::handleClient, this, clientSock);
+        t.detach();
     }
-
-std::cout << "Client connected!\n";
-
-// buffer to store message
-char buffer[1024] = {0};
-
-// receive message
-int bytesReceived = recv(clientSock, buffer, sizeof(buffer), 0);
-
-if (bytesReceived > 0) {
-    std::cout << "Client says: " << buffer << "\n";
-} else {
-    std::cout << "Failed to receive message.\n";
-}
-
-closesocket(clientSock);
 }
 
 void Server::stop() {

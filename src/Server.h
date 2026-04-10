@@ -4,6 +4,7 @@
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #include <iostream>
+#include <thread>
 
 #pragma comment(lib, "ws2_32.lib")
 
@@ -16,6 +17,7 @@ public:
     Server(int port);
     void start();
     void acceptClient();
+    void handleClient(SOCKET clientSock);
     void stop();
 };
 
