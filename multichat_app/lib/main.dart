@@ -11,7 +11,7 @@ const int kPort = 8080;
 void main() {
   runApp(const ChatApp());
 }
-
+``
 // ─── App Root ─────────────────────────────────────────────
 class ChatApp extends StatelessWidget {
   const ChatApp({super.key});
